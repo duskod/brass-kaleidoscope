@@ -1,0 +1,16 @@
+{
+  "name": "Brass Kaleidoscope",
+  "short_name": "Kaleidoscope",
+  "description": "A physics-simulated kaleidoscope: turn the phone and the glass tumbles; point it at light or use the camera as a teleidoscope.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0c0a09",
+  "theme_color": "#0c0a09",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
