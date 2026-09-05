@@ -13,6 +13,7 @@ between them around the apex. Turn the tube and the glass tumbles; no pattern ev
 - **Light** comes from the back camera used as a light meter: point it at a lamp and the
   glass blazes; point it at the floor and it goes dim.
 - **Teleidoscope**: switch *Object* to *Camera* and the mirrors reflect the live camera image.
+  Pinch the eyepiece, or use the Lens slider, to zoom.
 - **Snapshot** renders the pattern at your screen's resolution and opens the share sheet,
   so "Set as wallpaper" is a tap away.
 - Install it from the browser menu ("Add to Home screen"); it works offline.
@@ -32,6 +33,8 @@ turn.
 | `index.html` | the whole app, one file, no build step, no dependencies beyond two Google Fonts |
 | `manifest.webmanifest`, `sw.js`, `icon-*.png` | installable-app packaging and offline shell |
 | `src-artifact.html` | the same page without the document wrapper, as authored in Claude Code |
+| `build.py` | wraps `src-artifact.html` into `index.html` (run after editing the source) |
+| `icon.svg` | the app icon; the PNGs are rendered from it |
 
 ## Physics notes
 Circles with a friction impulse model, three contact iterations per 1/240 s substep. Piles
