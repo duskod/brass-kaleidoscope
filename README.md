@@ -2,6 +2,8 @@
 
 A kaleidoscope you can point at the light. **https://kaleidoscope.clockerly.com**
 
+![The glass tumbling as the tube turns](promo/demo.gif)
+
 Not a symmetry filter: it simulates the instrument. Coloured glass sits in a backlit object
 cell with a small granular-physics engine, and two front-surface mirrors reflect the wedge
 between them around the apex. Turn the tube and the glass tumbles; no pattern ever comes back.
