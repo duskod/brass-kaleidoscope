@@ -31,6 +31,7 @@ out = f'''<!doctype html>
 <meta property="og:title" content="Brass Kaleidoscope">
 <meta property="og:description" content="Turn your phone and the glass tumbles. A kaleidoscope you can point at the light.">
 <meta property="og:image" content="https://kaleidoscope.clockerly.com/icon-512.png">
+<script data-goatcounter="https://kaleidoscope.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 {head}{styles}
 <style>
   img{{max-width:100%}} [hidden]{{display:none!important}}
