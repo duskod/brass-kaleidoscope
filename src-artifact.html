@@ -63,6 +63,18 @@
     text-wrap: balance;
   }
   h1 em { font-style: normal; font-weight: 500; color: var(--brass-hi); }
+  .byline { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .byline a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--brass-lo); }
+  .byline a:hover { color: var(--brass); }
+  /* the signature: shown only in fullscreen (the view that gets recorded), and drawn into every snapshot */
+  .sig { display: none; }
+  .bezel:fullscreen .sig {
+    display: block; position: absolute; left: 50%; bottom: max(10px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: rgba(230,203,148,0.6);
+    white-space: nowrap; pointer-events: none; z-index: 2; text-shadow: 0 1px 3px #000;
+  }
+  @media (orientation: portrait) { .bezel:fullscreen .sig { bottom: auto; top: calc(100% + 12px); } }
+  body.unsigned .sig { display: none; }
 
   /* ---- eyepiece ---- */
   .bezel {
@@ -332,6 +344,10 @@
     font-variation-settings: "opsz" 14;
   }
   .note b { font-weight: 500; color: var(--text); }
+  .note a { color: var(--brass); text-decoration: none; border-bottom: 1px solid var(--brass-lo); }
+  .note a:hover { color: var(--brass-hi); }
+  .hint label { cursor: pointer; color: var(--brass); }
+  .hint input[type="checkbox"] { accent-color: var(--brass); vertical-align: -2px; margin: 0 4px 0 0; }
   @media (prefers-reduced-motion: reduce) {
     .seg button { transition: none; }
   }
@@ -341,6 +357,7 @@
   <header>
     <div class="eyebrow">Two-mirror · object cell · c. 1817 pattern</div>
     <h1>Brass <em>Kaleidoscope</em></h1>
+    <div class="byline">by <a href="https://duskod.github.io/" target="_blank" rel="noopener">Dusko Delic</a></div>
   </header>
 
   <div class="bezel" id="bezel">
@@ -351,6 +368,7 @@
       <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5l1.5 2h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
     </button>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="sig" id="sig" aria-hidden="true">Brass Kaleidoscope · kaleidoscope.clockerly.com · Dusko Delic</div>
     <button class="fsbtn" id="fsbtn" aria-label="Toggle fullscreen" title="Fullscreen (double-tap the eyepiece or press F)">
       <svg class="ico-in" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <svg class="ico-out" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M8 3v5H3M12 8V3h5M17 12h-5v5M3 12h5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -444,7 +462,13 @@
     22½° gives sixteen. The glass lives in a backlit cell at the far end and tumbles under gravity
     as you turn the tube, so no pattern ever comes back.
   </p>
-  <p class="hint"><a href="/privacy.html" style="color:var(--brass)">Privacy</a> · <a href="https://github.com/duskod/brass-kaleidoscope" style="color:var(--brass)">Source</a></p>
+  <p class="note">
+    Made by <b>Dusko Delic</b> in Teddington, London, in September 2026. Free, no adverts, no account;
+    the code is open under the MIT licence. Snapshots and the fullscreen view carry a small signature,
+    as a painting does; untick <b>signed</b> below to leave them bare.
+    More toys at <a href="https://duskod.github.io/" target="_blank" rel="noopener">duskod.github.io</a>.
+  </p>
+  <p class="hint"><a href="/privacy.html" style="color:var(--brass)">Privacy</a> · <a href="https://github.com/duskod/brass-kaleidoscope" style="color:var(--brass)">Source</a> · <label><input type="checkbox" id="signTog" checked>signed</label></p>
 </main>
 
 <script>
@@ -906,6 +930,35 @@
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
     clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
   }
+  // ---------- the signature ----------
+  const SIGN = { app: 'Brass Kaleidoscope', name: 'Dusko Delic', url: 'kaleidoscope.clockerly.com' };
+  const SIGN_LINE = `${SIGN.app} \u00b7 ${SIGN.url} \u00b7 ${SIGN.name}`;
+  let signed = true;
+  try { if (localStorage.getItem('kaleido.sign') === '0') signed = false; } catch (_) {}
+  function applySigned() { document.body.classList.toggle('unsigned', !signed); }
+  applySigned();
+  // the file carries the credit as well: a JPEG COM segment straight after SOI (shown as Comment by most tools)
+  const latin1 = str => Uint8Array.from(str, ch => ch.charCodeAt(0) & 255);
+  async function jpegWithComment(blob) {
+    try {
+      const src = new Uint8Array(await blob.arrayBuffer());
+      if (src[0] !== 0xFF || src[1] !== 0xD8) return blob;
+      const data = latin1(`${SIGN.app} by ${SIGN.name} \u00b7 https://${SIGN.url}/ \u00b7 \u00a9 ${new Date().getFullYear()} ${SIGN.name}`);
+      const seg = new Uint8Array(4 + data.length);
+      seg[0] = 0xFF; seg[1] = 0xFE; seg[2] = (data.length + 2) >> 8; seg[3] = (data.length + 2) & 255; seg.set(data, 4);
+      return new Blob([src.subarray(0, 2), seg, src.subarray(2)], { type: 'image/jpeg' });
+    } catch (_) { return blob; }
+  }
+  function signCanvas(oc, W, H, mode, Rs) {
+    if (!signed) return;
+    oc.setTransform(1, 0, 0, 1, 0, 0); oc.globalCompositeOperation = 'source-over'; oc.globalAlpha = 1;
+    const fs = Math.max(13, Math.round(Math.min(W, H) * 0.016));
+    oc.font = `500 ${fs}px "IBM Plex Mono", Menlo, Consolas, monospace`; oc.textBaseline = 'alphabetic';
+    oc.shadowColor = 'rgba(0,0,0,0.85)'; oc.shadowBlur = fs * 0.5;
+    if (mode === 'fit') { oc.textAlign = 'center'; oc.fillStyle = 'rgba(230,203,148,0.8)'; oc.fillText(SIGN_LINE, W / 2, Math.min(H - fs, H / 2 + Rs + fs * 1.9)); }
+    else { oc.textAlign = 'right'; oc.fillStyle = 'rgba(255,255,255,0.8)'; oc.fillText(SIGN_LINE, W - fs * 1.2, H - fs * 1.2); }
+  }
+
   // mode 'fill': the pattern reaches the corners (home screen). 'fit': the whole eyepiece on black (lock screen).
   function renderSnapshot(W, H, mode = 'fill') {
     // the phone's own screen, so it fits as a wallpaper; capped so big desktops stay sane
@@ -931,6 +984,7 @@
       oc.globalCompositeOperation = 'destination-over';
       oc.fillStyle = '#000'; oc.fillRect(0, 0, W, H);
     }
+    signCanvas(oc, W, H, mode, Rs);
     return out;
   }
   let snapping = false;
@@ -948,13 +1002,14 @@
       toast('Encoding…');
       await new Promise(r => setTimeout(r, 20));
       const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-      const name = `kaleidoscope-${stamp}.jpg`;
-      const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.95));
+      const name = `brass-kaleidoscope-by-dusko-delic-${stamp}.jpg`;
+      let blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.95));
       if (!blob) { toast('Could not render'); return; }
+      blob = await jpegWithComment(blob);
       const file = new File([blob], name, { type: 'image/jpeg' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         toast('Opening share…');
-        try { await navigator.share({ files: [file], title: 'Kaleidoscope' }); toast(`Shared ${cv.width}×${cv.height}`); return; }
+        try { await navigator.share({ files: [file], title: SIGN.app, text: `Made with ${SIGN.app} by ${SIGN.name} \u00b7 https://${SIGN.url}/` }); toast(`Shared ${cv.width}×${cv.height}`); return; }
         catch (e) { if (e && e.name === 'AbortError') { toast('Cancelled'); return; } }
       }
       const url = URL.createObjectURL(blob);
@@ -1360,6 +1415,8 @@
     state.speed = +ev.target.value;
     $('speedOut').textContent = `${state.speed}°/s`;
   });
+  $('signTog').checked = signed;
+  $('signTog').addEventListener('change', ev => { signed = ev.target.checked; applySigned(); try { localStorage.setItem('kaleido.sign', signed ? '1' : '0'); } catch (_) {} });
   $('shake').addEventListener('click', () => shake());
   $('reseed').addEventListener('click', () => seedPieces());
   function toggleFull() {
@@ -1383,7 +1440,7 @@
   });
   document.addEventListener('fullscreenchange', () => requestAnimationFrame(resize));
 
-  window.kaleido = { state, get pieces() { return pieces; }, renderSnapshot };
+  window.kaleido = { state, get pieces() { return pieces; }, renderSnapshot, jpegWithComment };
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) return;

@@ -20,6 +20,10 @@ out = f'''<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0c0a09">
 <meta name="description" content="A physics-simulated kaleidoscope. Turn the phone and the glass tumbles; point it at light; or look through the camera as a teleidoscope.">
+<meta name="author" content="Dusko Delic">
+<link rel="author" href="https://duskod.github.io/">
+<link rel="author" type="text/plain" href="/humans.txt">
+<script type="application/ld+json">{{"@context":"https://schema.org","@type":"WebApplication","name":"Brass Kaleidoscope","url":"https://kaleidoscope.clockerly.com/","image":"https://kaleidoscope.clockerly.com/promo/og.png","applicationCategory":"EntertainmentApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","isAccessibleForFree":true,"offers":{{"@type":"Offer","price":"0","priceCurrency":"GBP"}},"author":{{"@type":"Person","name":"Dusko Delic","url":"https://duskod.github.io/"}},"creator":{{"@type":"Person","name":"Dusko Delic","url":"https://duskod.github.io/"}},"copyrightHolder":{{"@type":"Person","name":"Dusko Delic"}},"copyrightYear":2026,"license":"https://github.com/duskod/brass-kaleidoscope/blob/main/LICENSE","codeRepository":"https://github.com/duskod/brass-kaleidoscope","description":"A physics-simulated kaleidoscope. Turn the phone and the glass tumbles; point it at light; or look through the camera as a teleidoscope."}}</script>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">

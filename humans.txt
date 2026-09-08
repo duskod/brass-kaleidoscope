@@ -1,0 +1,13 @@
+/* TEAM */
+Maker: Dusko Delic
+Site: https://duskod.github.io/
+GitHub: https://github.com/duskod
+Location: Teddington, London, UK
+
+/* SITE */
+Name: Brass Kaleidoscope
+URL: https://kaleidoscope.clockerly.com/
+Source: https://github.com/duskod/brass-kaleidoscope
+Licence: MIT
+Built: September 2026
+Standards: HTML5, CSS3, ES2020, Canvas 2D, DeviceOrientation, getUserMedia, Web Share, PWA

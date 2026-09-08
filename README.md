@@ -2,6 +2,8 @@
 
 A kaleidoscope you can point at the light. **https://kaleidoscope.clockerly.com**
 
+Made by [Dusko Delic](https://duskod.github.io/) in Teddington, London, 2026. Free, open source (MIT), no adverts, no account.
+
 ![The glass tumbling as the tube turns](promo/demo.gif)
 
 Not a symmetry filter: it simulates the instrument. Coloured glass sits in a backlit object
