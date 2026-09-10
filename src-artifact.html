@@ -529,11 +529,23 @@
   const wctx = wedge.getContext('2d');
   const bloom = document.createElement('canvas');
   const bctx = bloom.getContext('2d');
-  let R = 300, dpr = 1, dprCap = 1.5;      // R: view radius in css px
+  // Every wedge is stamped round the circle with a rotated drawImage, and each of those is a
+  // bilinear resample. At one backing pixel per css pixel that doubles the width of every glass
+  // edge — measured 10-90% rise: 1.15px as drawn, 1.93px once stamped — which reads as very
+  // slightly out of focus. Two backing pixels per css pixel put the blur back under half a css
+  // pixel and the edges look drawn again; three is no better than two.
+  // Supersampling costs the square of itself, so it is spent against a fixed budget of backing
+  // pixels rather than left to the frame-rate fallback below: a small eyepiece gets the full
+  // SHARP, a huge fullscreen one keeps whatever ratio fits. That is steady, where the fallback
+  // would soften the picture mid-use and never give it back — its demotion is one-way.
+  const SHARP = 2, PIXEL_BUDGET = 2.4e6;
+  let R = 300, dpr = 1, dprCap = SHARP;      // R: view radius in css px
 
   function resize() {
     const s = eyepiece.clientWidth || 300;
-    dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+    const base = window.devicePixelRatio || 1;
+    const fits = Math.sqrt(PIXEL_BUDGET) / s;
+    dpr = Math.min(Math.max(base, Math.min(SHARP, fits)), dprCap);
     R = s / 2;
     view.width = cell.width = wedge.width = Math.round(s * dpr);
     view.height = cell.height = wedge.height = Math.round(s * dpr);
@@ -1033,9 +1045,10 @@
       const fps = Math.round(fpsN / fpsAcc);
       $('fps').textContent = `${fps} fps`;
       fpsAcc = 0; fpsN = 0;
-      // a phone that cannot hold 40 fps gets fewer pixels to push
+      // a phone that cannot hold 40 fps gets fewer pixels to push: first the supersampling that
+      // keeps the stamped edges sharp, then the device pixel ratio itself
       slowTicks = fps < 40 ? slowTicks + 1 : 0;
-      if (slowTicks >= 3 && dprCap > 1) { dprCap = 1; slowTicks = 0; resize(); }
+      if (slowTicks >= 3 && dprCap > 1) { dprCap = dprCap > 1.5 ? 1.5 : 1; slowTicks = 0; resize(); }
     }
     if (dt > 0.1) dt = 0.1;
     if (!state.dragging) {
