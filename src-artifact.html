@@ -160,6 +160,9 @@
   .toast.show { opacity: 1; }
   .bezel:fullscreen .toast { bottom: max(18px, env(safe-area-inset-bottom)); }
   .bezel:fullscreen .fsbtn { top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); }
+  /* in fullscreen the buttons stay out of the picture; a touch on the black brings them up for a few seconds */
+  .bezel:fullscreen .fsbtn { opacity: 0; visibility: hidden; transition: opacity .35s, visibility 0s .35s; }
+  .bezel:fullscreen.ui .fsbtn { opacity: 1; visibility: visible; transition: opacity .15s; }
   .bezel:fullscreen .fsbtn .ico-in { display: none; }
   .bezel:fullscreen .fsbtn .ico-out { display: block; }
   .bezel:fullscreen .eyepiece { width: var(--size); height: var(--size); }
@@ -369,12 +372,12 @@
     </button>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="sig" id="sig" aria-hidden="true">Brass Kaleidoscope · kaleidoscope.clockerly.com · Dusko Delic</div>
-    <button class="fsbtn" id="fsbtn" aria-label="Toggle fullscreen" title="Fullscreen (double-tap the eyepiece or press F)">
+    <button class="fsbtn" id="fsbtn" aria-label="Toggle fullscreen" title="Fullscreen (double-tap the eyepiece or press F; in fullscreen, tap the black to show the buttons)">
       <svg class="ico-in" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <svg class="ico-out" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M8 3v5H3M12 8V3h5M17 12h-5v5M3 12h5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
-  <p class="hint"><span id="fps" title="frames per second">— fps</span> · drag the eyepiece to turn the tube · scroll to fine-turn · <kbd>←</kbd> <kbd>→</kbd> turn · <kbd>space</kbd> shake · double-tap or <kbd>f</kbd> for fullscreen · <kbd>s</kbd> snapshot · on a phone, gravity follows the phone itself · <em>Object → Camera</em> turns it into a teleidoscope, pinch to zoom the lens</p>
+  <p class="hint"><span id="fps" title="frames per second">— fps</span> · drag the eyepiece to turn the tube · scroll to fine-turn · <kbd>←</kbd> <kbd>→</kbd> turn · <kbd>space</kbd> shake · double-tap or <kbd>f</kbd> for fullscreen (tap the black there to show the buttons) · <kbd>s</kbd> snapshot · on a phone, gravity follows the phone itself · <em>Object → Camera</em> turns it into a teleidoscope, pinch to zoom the lens</p>
 
   <section class="plate" aria-label="Controls">
     <div class="control">
@@ -1452,6 +1455,31 @@
     else if (ev.key === 'S') { snapshot('fit'); ev.preventDefault(); }
   });
   document.addEventListener('fullscreenchange', () => requestAnimationFrame(resize));
+
+  // Fullscreen hides the two buttons so nothing sits on the picture. A touch on the black
+  // (the bezel itself, not the eyepiece) shows them for a few seconds; a second touch hides them.
+  // They also show briefly on entry, so a first-time viewer learns where they are.
+  {
+    const bezel = $('bezel');
+    let hideTimer = 0;
+    const showUi = (ms = 3500) => {
+      bezel.classList.add('ui');
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => bezel.classList.remove('ui'), ms);
+    };
+    const hideUi = () => { clearTimeout(hideTimer); bezel.classList.remove('ui'); };
+    bezel.addEventListener('pointerdown', ev => {
+      if (!document.fullscreenElement) return;
+      if (ev.target !== bezel) {                     // eyepiece, a button: leave it to them
+        if (ev.target.closest && ev.target.closest('.fsbtn')) showUi();
+        return;
+      }
+      if (bezel.classList.contains('ui')) hideUi(); else showUi();
+    });
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement === bezel) showUi(2500); else hideUi();
+    });
+  }
 
   window.kaleido = { state, get pieces() { return pieces; }, renderSnapshot, jpegWithComment };
 
