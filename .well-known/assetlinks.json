@@ -1,8 +1,15 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.clockerly.kaleidoscope",
-    "sha256_cert_fingerprints": ["3F:0A:BA:E4:46:21:85:D4:D6:51:CC:A9:67:13:58:8F:AE:35:CD:0D:B1:E6:2E:66:F3:81:66:9B:D1:AE:E3:DF"]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.clockerly.kaleidoscope",
+      "sha256_cert_fingerprints": [
+        "3F:0A:BA:E4:46:21:85:D4:D6:51:CC:A9:67:13:58:8F:AE:35:CD:0D:B1:E6:2E:66:F3:81:66:9B:D1:AE:E3:DF",
+        "5A:81:D8:4A:8F:20:52:2A:32:B3:2F:18:FC:7B:7C:43:89:C2:26:29:54:69:41:37:80:67:A0:2B:C1:06:EA:50"
+      ]
+    }
   }
-}]
+]
