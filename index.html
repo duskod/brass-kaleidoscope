@@ -308,9 +308,13 @@
   .swatches button:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
   .swatches button.custom-swatch { position: relative; }
   .swatches button.custom-swatch::after {
-    content: "custom"; position: absolute; inset: 0; display: grid; place-items: center;
+    content: attr(data-label); position: absolute; inset: 0; display: grid; place-items: center;
     font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
     color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+  }
+  .swatches button.add-swatch {
+    border-style: dashed; color: var(--brass); font-family: var(--mono); font-size: 15px;
+    justify-content: center; align-items: center;
   }
   .customrow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .customrow input[type="color"] {
@@ -433,6 +437,7 @@
       <div class="customrow" id="customrow" hidden>
         <span id="customInputs" style="display:contents"></span>
         <button class="act" id="customRandom" title="Roll a fresh harmonious set">Roll</button>
+        <button class="act" id="customDelete" title="Throw this custom set away">Delete</button>
       </div>
     </div>
 
@@ -530,12 +535,19 @@
     sepia:     { name: 'Sepia',         colors: ['#3d2b1f', '#6b4f3a', '#8c6b4e', '#b08d57', '#d9bd86', '#e6cb94', '#a67c52', '#5c4326'] },
     ink:       { name: 'Ink & gold',    colors: ['#0b0b0f', '#1c1c2e', '#2a2a44', '#d4af37', '#f1d27a', '#3f3f5c', '#8a7a3a', '#101018'] },
     aurora:    { name: 'Aurora',        colors: ['#00ffa3', '#00c2ff', '#7a5cff', '#ff5ce1', '#00ff8c', '#2bd1ff', '#9d4edd', '#c8ff00'] },
-    custom:    { name: 'Custom',        colors: ['#c8102e', '#0b6e4f', '#1f4e9c', '#f2a900', '#7b2d8e', '#2bb5b0'] },
   };
+  // The player's own sets, as many as they like; they join GLASS as custom, custom2, custom3 …
+  let customs = [['#c8102e', '#0b6e4f', '#1f4e9c', '#f2a900', '#7b2d8e', '#2bb5b0']];
   try {
-    const saved = JSON.parse(localStorage.getItem('kaleido.custom') || 'null');
-    if (Array.isArray(saved) && saved.length >= 2 && saved.every(c => /^#[0-9a-f]{6}$/i.test(c))) GLASS.custom.colors = saved;
+    const ok = c => Array.isArray(c) && c.length >= 2 && c.every(x => /^#[0-9a-f]{6}$/i.test(x));
+    const many = JSON.parse(localStorage.getItem('kaleido.customs') || 'null');
+    const one = JSON.parse(localStorage.getItem('kaleido.custom') || 'null');   // from when there was only one
+    if (Array.isArray(many) && many.length && many.every(ok)) customs = many;
+    else if (ok(one)) customs = [one];
   } catch (_) {}
+  const customKey = i => i ? `custom${i + 1}` : 'custom';
+  const customIndex = k => k === 'custom' ? 0 : /^custom\d+$/.test(k) ? +k.slice(6) - 1 : -1;
+  customs.forEach((colors, i) => { GLASS[customKey(i)] = { name: customs.length > 1 ? `Custom ${i + 1}` : 'Custom', colors }; });
 
   const state = {
     mirrors: 3,            // N mirrors-angle = PI/N, symmetry = 2N
@@ -1364,6 +1376,15 @@
 
   // ---------- control plate ----------
   const $ = id => document.getElementById(id);
+  // The settings are remembered on this device, so the toy opens the way it was left. Only a
+  // deliberate pick is saved: a camera that fails to open, or one closed because the tab was
+  // hidden, falls back on screen but keeps the choice for next time.
+  let prefs = {};
+  try { prefs = JSON.parse(localStorage.getItem('kaleido.settings') || '{}') || {}; } catch (_) {}
+  function remember(key, value) {
+    prefs[key] = value;
+    try { localStorage.setItem('kaleido.settings', JSON.stringify(prefs)); } catch (_) {}
+  }
   function segment(el, attr, onPick) {
     el.addEventListener('click', ev => {
       const b = ev.target.closest('button'); if (!b) return;
@@ -1372,26 +1393,28 @@
     });
   }
   segment($('mirrorSeg'), 'n', n => {
-    state.mirrors = +n;
+    state.mirrors = +n; remember('mirrors', state.mirrors);
     const deg = 180 / state.mirrors;
     $('foldOut').textContent = `${deg % 1 ? deg.toFixed(1) : deg}° · ${2 * state.mirrors}-fold`;
   });
-  segment($('gravSeg'), 'grav', v => { if (v === 'phone') enableTilt(); else disableTilt(); });
-  segment($('lightSeg'), 'light', v => { if (v === 'camera') enableCam(); else disableCam(); });
-  segment($('objSeg'), 'obj', v => { if (v === 'camera') enableTele(); else disableTele(); });
+  segment($('gravSeg'), 'grav', v => { remember('grav', v); if (v === 'phone') enableTilt(); else disableTilt(); });
+  segment($('lightSeg'), 'light', v => { remember('lightSrc', v); if (v === 'camera') enableCam(); else disableCam(); });
+  segment($('objSeg'), 'obj', v => { remember('obj', v); if (v === 'camera') enableTele(); else disableTele(); });
   function setZoom(z) {
     state.zoom = Math.min(4, Math.max(1, z));
     $('zoom').value = Math.round(state.zoom * 10);
     $('zoomOut').textContent = `×${state.zoom.toFixed(1)}`;
+    remember('zoom', state.zoom);
   }
   $('zoom').addEventListener('input', ev => setZoom(+ev.target.value / 10));
   $('light').addEventListener('input', ev => {
     if (state.camOn) return;
     state.lightTarget = +ev.target.value / 100;
+    remember('light', +ev.target.value);
     $('lightOut').textContent = `Manual · ${ev.target.value}%`;
   });
   segment($('cellSeg'), 'cell', c => {
-    state.oil = c === 'oil';
+    state.oil = c === 'oil'; remember('cell', c);
     $('cellOut').textContent = state.oil ? 'Oil-filled' : 'Dry';
   });
 
@@ -1402,47 +1425,84 @@
       const s = document.createElement('span'); s.style.background = c; b.appendChild(s);
     }
   }
-  for (const key in GLASS) {
+  function swatchButton(key) {
     const b = document.createElement('button');
     b.dataset.glass = key;
     b.setAttribute('aria-pressed', String(key === state.glass));
     b.setAttribute('aria-label', GLASS[key].name);
     b.title = GLASS[key].name;
-    if (key === 'custom') b.className = 'custom-swatch';
+    if (customIndex(key) >= 0) { b.className = 'custom-swatch'; b.dataset.label = GLASS[key].name; }
     paintSwatch(b, GLASS[key].colors);
-    sw.appendChild(b);
+    return b;
+  }
+  for (const key in GLASS) if (customIndex(key) < 0) sw.appendChild(swatchButton(key));
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-swatch'; addBtn.textContent = '+';
+  addBtn.title = 'New custom set, starting from the glass in the tube';
+  addBtn.setAttribute('aria-label', addBtn.title);
+  sw.appendChild(addBtn);
+  function buildCustomSwatches() {
+    for (const k of Object.keys(GLASS)) if (customIndex(k) >= 0) delete GLASS[k];
+    for (const b of sw.querySelectorAll('.custom-swatch')) b.remove();
+    customs.forEach((colors, i) => {
+      GLASS[customKey(i)] = { name: customs.length > 1 ? `Custom ${i + 1}` : 'Custom', colors };
+      sw.insertBefore(swatchButton(customKey(i)), addBtn);
+    });
+    $('customDelete').hidden = customs.length < 2;
   }
   function recolour() {
     const colors = GLASS[state.glass].colors;
     for (const p of pieces) p.color = pick(colors);
   }
   segment(sw, 'glass', g => {
-    state.glass = g;
+    state.glass = g; remember('glass', g);
     $('glassOut').textContent = GLASS[g].name;
-    $('customrow').hidden = g !== 'custom';
+    $('customrow').hidden = customIndex(g) < 0;
+    if (customIndex(g) >= 0) buildCustomInputs();
     recolour();
   });
-  // custom scheme: six pickers, remembered on this device
+  // a custom set: six pickers on whichever one is in the tube, remembered on this device
   const ci = $('customInputs');
+  const current = () => customs[customIndex(state.glass)];
   function buildCustomInputs() {
     ci.textContent = '';
-    GLASS.custom.colors.slice(0, 6).forEach((c, i) => {
+    const colors = current(); if (!colors) return;
+    colors.slice(0, 6).forEach((c, i) => {
       const inp = document.createElement('input');
       inp.type = 'color'; inp.value = c; inp.setAttribute('aria-label', `Custom colour ${i + 1}`);
       inp.addEventListener('input', () => {
-        GLASS.custom.colors[i] = inp.value;
+        colors[i] = inp.value;
         saveCustom();
-        if (state.glass === 'custom') recolour();
+        recolour();
       });
       ci.appendChild(inp);
     });
-    paintSwatch(sw.querySelector('[data-glass="custom"]'), GLASS.custom.colors);
   }
   function saveCustom() {
-    try { localStorage.setItem('kaleido.custom', JSON.stringify(GLASS.custom.colors)); } catch (_) {}
-    paintSwatch(sw.querySelector('[data-glass="custom"]'), GLASS.custom.colors);
+    try {
+      localStorage.setItem('kaleido.customs', JSON.stringify(customs));
+      localStorage.removeItem('kaleido.custom');
+    } catch (_) {}
+    const b = sw.querySelector(`[data-glass="${state.glass}"]`);
+    if (b && current()) paintSwatch(b, current());
   }
+  const pickGlass = key => sw.querySelector(`[data-glass="${key}"]`).click();
+  addBtn.addEventListener('click', ev => {
+    ev.stopPropagation();                      // not a glass of its own: makes one, then picks it
+    customs.push(GLASS[state.glass].colors.slice(0, 6));
+    buildCustomSwatches(); saveCustom();
+    pickGlass(customKey(customs.length - 1));
+  });
+  $('customDelete').addEventListener('click', () => {
+    const i = customIndex(state.glass);
+    if (i < 0 || customs.length < 2) return;
+    customs.splice(i, 1);
+    state.glass = 'venetian';                  // briefly, so the rebuild presses nothing stale
+    buildCustomSwatches(); saveCustom();
+    pickGlass(customKey(Math.min(i, customs.length - 1)));
+  });
   $('customRandom').addEventListener('click', () => {
+    const i = customIndex(state.glass); if (i < 0) return;
     // a hue spread around a random base, with varied lightness so glass reads as glass
     const base = Math.random() * 360, spread = 40 + Math.random() * 120;
     const hsl = (h, sat, l) => {
@@ -1450,21 +1510,23 @@
       const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
       return '#' + [r, g, b].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
     };
-    GLASS.custom.colors = [0, 1, 2, 3, 4, 5].map(i => hsl(base + (i - 2.5) * spread / 5 + (i === 5 ? 180 : 0), 0.55 + Math.random() * 0.4, 0.35 + Math.random() * 0.3));
+    customs[i] = [0, 1, 2, 3, 4, 5].map(i => hsl(base + (i - 2.5) * spread / 5 + (i === 5 ? 180 : 0), 0.55 + Math.random() * 0.4, 0.35 + Math.random() * 0.3));
+    GLASS[state.glass].colors = customs[i];
     buildCustomInputs(); saveCustom();
-    if (state.glass === 'custom') recolour();
+    recolour();
   });
-  buildCustomInputs();
+  buildCustomSwatches();
 
   $('pieces').addEventListener('input', ev => {
-    state.count = +ev.target.value;
+    state.count = +ev.target.value; remember('count', state.count);
     $('piecesOut').textContent = state.count;
   });
   $('pieces').addEventListener('change', () => seedPieces());
+  if (typeof prefs.speed === 'number') state.speed = prefs.speed;
   $('speed').value = state.speed;
   $('speedOut').textContent = `${state.speed}°/s`;
   $('speed').addEventListener('input', ev => {
-    state.speed = +ev.target.value;
+    state.speed = +ev.target.value; remember('speed', state.speed);
     $('speedOut').textContent = `${state.speed}°/s`;
   });
   $('signTog').checked = signed;
@@ -1528,15 +1590,37 @@
   // ---------- go ----------
   new ResizeObserver(resize).observe(eyepiece);
   resize();
+  // Put the plate back the way it was left (pressing the same buttons a hand would).
+  const press = (seg, sel) => { const b = $(seg).querySelector(sel); if (b) b.click(); };
+  const slide = (id, v) => { if (typeof v !== 'number') return; $(id).value = v; $(id).dispatchEvent(new Event('input')); };
+  if (prefs.mirrors) press('mirrorSeg', `[data-n="${prefs.mirrors}"]`);
+  if (prefs.glass && GLASS[prefs.glass]) press('swatches', `[data-glass="${prefs.glass}"]`);
+  if (prefs.cell) press('cellSeg', `[data-cell="${prefs.cell}"]`);
+  slide('pieces', prefs.count);
+  slide('light', prefs.light);
+  if (typeof prefs.zoom === 'number') setZoom(prefs.zoom);
   seedPieces();
-  // On a phone in its own tab, start as the real instrument: gravity from the phone, light from the camera.
-  // (Not inside the artifact viewer, which blocks both, and not where a tap is needed to ask permission.)
+  // On a phone in its own tab, start as the real instrument: gravity from the phone, light from the camera,
+  // unless the player chose otherwise last time. (Not inside the artifact viewer, which blocks both, and
+  // not where a tap is needed to ask permission.) A remembered camera is only reopened if permission
+  // is already granted, so a returning visit never opens with a prompt.
   const handheld = matchMedia('(pointer: coarse)').matches && window.self === window.top;
   const needsTap = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
-  if (handheld && !needsTap) {
-    setGrav('phone'); enableTilt();
-    setLight('camera'); enableCam();
-  }
+  const wantTilt = prefs.grav ? prefs.grav === 'phone' : handheld;
+  if (wantTilt && !needsTap && window.self === window.top) { setGrav('phone'); enableTilt(); }
+  (async () => {
+    const wantMeter = prefs.lightSrc ? prefs.lightSrc === 'camera' : handheld && !needsTap;
+    const wantTele = prefs.obj === 'camera';
+    if (!wantMeter && !wantTele) return;
+    if (prefs.lightSrc || wantTele) {                 // a remembered choice: don't prompt for it
+      try {
+        const p = await navigator.permissions.query({ name: 'camera' });
+        if (p.state !== 'granted') return;
+      } catch (_) { return; }
+    }
+    if (wantTele) { setObj('camera'); await enableTele(); }
+    if (wantMeter) { setLight('camera'); await enableCam(); }
+  })();
   requestAnimationFrame(t => { last = t; frame(t); });
 })();
 
