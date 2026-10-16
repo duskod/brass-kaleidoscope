@@ -42,7 +42,7 @@
     --brass-hi: #e6cb94;
     --brass-lo: #6e5330;
     --text: #e8dcc8;
-    --muted: #8c7b66;
+    --muted: #b8a78e;
     --velvet: #2b1a20;
     --display: "Fraunces", "Iowan Old Style", Georgia, serif;
     --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
@@ -76,7 +76,7 @@
   }
   .eyebrow {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12.5px;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--brass);
@@ -94,14 +94,14 @@
     text-wrap: balance;
   }
   h1 em { font-style: normal; font-weight: 500; color: var(--brass-hi); }
-  .byline { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .byline { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
   .byline a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--brass-lo); }
   .byline a:hover { color: var(--brass); }
   /* the signature: shown only in fullscreen (the view that gets recorded), and drawn into every snapshot */
   .sig { display: none; }
   .bezel:fullscreen .sig {
     display: block; position: absolute; left: 50%; bottom: max(10px, env(safe-area-inset-bottom)); transform: translateX(-50%);
-    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: rgba(230,203,148,0.6);
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.1em; color: rgba(230,203,148,0.6);
     white-space: nowrap; pointer-events: none; z-index: 2; text-shadow: 0 1px 3px #000;
   }
   @media (orientation: portrait) { .bezel:fullscreen .sig { bottom: auto; top: calc(100% + 12px); } }
@@ -194,7 +194,7 @@
   .bezel:fullscreen .snapbtn { left: max(12px, env(safe-area-inset-left)); right: auto; }
   .toast {
     position: absolute; left: 50%; bottom: -6px; transform: translate(-50%, 0);
-    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.08em;
+    font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em;
     color: var(--brass-hi); background: rgba(12,10,9,0.9); border: 1px solid var(--brass-lo);
     border-radius: 4px; padding: 6px 12px; opacity: 0; pointer-events: none;
     transition: opacity .25s; white-space: nowrap; z-index: 3;
@@ -211,7 +211,7 @@
 
   .hint {
     font-family: var(--mono);
-    font-size: 11.5px;
+    font-size: 13px;
     letter-spacing: 0.04em;
     color: var(--muted);
     text-align: center;
@@ -254,7 +254,7 @@
   #zoomRow[hidden] { display: none; }
   .control > label, .control > .lbl, #zoomRow > label {
     font-family: var(--mono);
-    font-size: 10.5px;
+    font-size: 12.5px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--brass);
@@ -283,7 +283,7 @@
     border-right: 1px solid var(--brass-lo);
     color: var(--muted);
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 13.5px;
     padding: 8px 4px;
     cursor: pointer;
     font-variant-numeric: tabular-nums;
@@ -320,7 +320,7 @@
   .swatches button.custom-swatch { position: relative; }
   .swatches button.custom-swatch::after {
     content: attr(data-label); position: absolute; inset: 0; display: grid; place-items: center;
-    font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
     color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.9);
   }
   .swatches button.add-swatch {
@@ -336,7 +336,7 @@
   .customrow input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
   .customrow input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 2px; }
   .customrow input[type="color"]::-moz-color-swatch { border: 0; border-radius: 2px; }
-  .customrow .act { flex: 0 0 auto; padding: 6px 10px; font-size: 11px; }
+  .customrow .act { flex: 0 0 auto; padding: 6px 10px; font-size: 12.5px; }
   input[type="range"] {
     appearance: none;
     -webkit-appearance: none;
@@ -374,7 +374,7 @@
     border-radius: 4px;
     color: var(--brass-hi);
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 13.5px;
     letter-spacing: 0.08em;
     padding: 9px 6px;
     cursor: pointer;
